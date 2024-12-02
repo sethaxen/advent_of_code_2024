@@ -1,12 +1,15 @@
 use aoc::load_input;
 use itertools::Itertools;
 
-fn is_report_safe(report: &str) -> bool {
-    let levels = report.split_whitespace().map(|n| n.parse::<u32>().unwrap());
+fn parse_report(report: &str) -> impl Iterator<Item = u32> + '_ {
+    return report.split_whitespace().map(|n| n.parse::<u32>().unwrap());
+}
+
+fn are_levels_safe(levels: impl Iterator<Item = u32>) -> bool {
     let unique_level_signs: Vec<i32> = levels
         .tuple_windows()
         .map(|(first, last)| {
-            let diff = (first as i32) - (last as i32);
+            let diff = first as i32 - last as i32;
             return if diff.abs() > 3 || diff == 0 {
                 0
             } else {
@@ -22,7 +25,7 @@ fn solve_part1(input: &str) -> usize {
     let num_safe = input
         .trim_end()
         .lines()
-        .map(is_report_safe)
+        .map(|r| are_levels_safe(parse_report(r)))
         .filter(|b| *b)
         .count();
     return num_safe;
