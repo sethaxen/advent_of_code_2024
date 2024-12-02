@@ -1,8 +1,23 @@
 use aoc::load_input;
 use itertools::Itertools;
 
-fn parse_report(report: &str) -> impl Iterator<Item = u32> + '_ {
-    return report.split_whitespace().map(|n| n.parse::<u32>().unwrap());
+fn parse_report(report: &str) -> Vec<u32> {
+    return report
+        .split_whitespace()
+        .map(|n| n.parse::<u32>().unwrap())
+        .collect();
+}
+
+fn iter_excluding_index<T>(iter: impl Iterator<Item = T>, i: usize) -> impl Iterator<Item = T> {
+    return iter.enumerate().filter_map(
+        move |(index, item)| {
+            if index == i {
+                None
+            } else {
+                Some(item)
+            }
+        },
+    );
 }
 
 fn are_levels_safe(levels: impl Iterator<Item = u32>) -> bool {
@@ -21,11 +36,31 @@ fn are_levels_safe(levels: impl Iterator<Item = u32>) -> bool {
     return unique_level_signs.len() == 1 && unique_level_signs[0] != 0;
 }
 
+fn are_levels_almost_safe(levels: Vec<u32>) -> bool {
+    let num_levels = levels.len();
+    for i in 0..num_levels {
+        if are_levels_safe(iter_excluding_index(levels.iter().copied(), i)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 fn solve_part1(input: &str) -> usize {
     let num_safe = input
         .trim_end()
         .lines()
-        .map(|r| are_levels_safe(parse_report(r)))
+        .map(|r| are_levels_safe(parse_report(r).into_iter()))
+        .filter(|b| *b)
+        .count();
+    return num_safe;
+}
+
+fn solve_part2(input: &str) -> usize {
+    let num_safe = input
+        .trim_end()
+        .lines()
+        .map(|r| are_levels_almost_safe(parse_report(r)))
         .filter(|b| *b)
         .count();
     return num_safe;
@@ -34,6 +69,7 @@ fn solve_part1(input: &str) -> usize {
 fn main() {
     let input = load_input("day02.txt");
     println!("Solution to part 1: {}", solve_part1(&input));
+    println!("Solution to part 2: {}", solve_part2(&input));
 }
 
 #[cfg(test)]
@@ -51,5 +87,10 @@ mod tests {
     #[test]
     fn test_part1() {
         assert_eq!(solve_part1(EXAMPLE_INPUT), 2);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(solve_part2(EXAMPLE_INPUT), 4);
     }
 }
