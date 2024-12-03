@@ -3,39 +3,39 @@ use regex::Regex;
 
 fn compute_muls(input: &str) -> usize {
     let pattern = Regex::new(r"mul\((?<l>\d{1,3}),(?<r>\d{1,3})\)").unwrap();
-    return pattern
+    pattern
         .captures_iter(input)
         .map(|caps| {
             let l = caps.name("l").unwrap().as_str().parse::<usize>().unwrap();
             let r = caps.name("r").unwrap().as_str().parse::<usize>().unwrap();
-            return l * r;
+            l * r
         })
-        .sum();
+        .sum()
 }
 
 fn solve_part1(input: &str) -> usize {
-    return compute_muls(input);
+    compute_muls(input)
 }
 
 fn solve_part2(input: &str) -> usize {
-    return input
+    input
         .split("don't()")
         .enumerate()
         .map(|(i, b)| {
-            if i == 0 {
-                return compute_muls(b);
+            let enabled = if i == 0 {
+                b
             } else {
-                let (_disabled, enabled) = b.split_once("do()").or(Some(("", ""))).unwrap();
-                return compute_muls(enabled);
-            }
+                b.split_once("do()").unwrap_or(("", "")).1
+            };
+            compute_muls(enabled)
         })
-        .sum();
+        .sum()
 }
 
 fn main() {
     let input = load_input("day03.txt");
     println!("Solution to part 1: {}", solve_part1(&input));
-    println!("Solution to part 1: {}", solve_part2(&input));
+    println!("Solution to part 2: {}", solve_part2(&input));
 }
 
 #[cfg(test)]
