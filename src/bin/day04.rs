@@ -20,6 +20,12 @@ fn bytes_as_u32(word: &str) -> u32 {
         .fold(0, |acc, b| (acc << 8) | b as u32)
 }
 
+fn bytes_as_u16(word: &str) -> u16 {
+    word.chars()
+        .map(|c| c as u8)
+        .fold(0, |acc, b| (acc << 8) | b as u16)
+}
+
 fn count_matches_line(
     grid: &Grid<u8>,
     start: Point<usize>,
@@ -96,9 +102,34 @@ fn solve_part1(input: &str) -> u32 {
     match_count
 }
 
+fn solve_part2(input: &str) -> u32 {
+    let grid = parse_grid(input);
+    let rows = grid.len();
+    let cols = grid[0].len();
+    let patterns = [bytes_as_u16("MS"), bytes_as_u16("SM")];
+    let mut match_count: u32 = 0;
+    for row_idx in 1..rows - 1 {
+        for col_idx in 1..cols - 1 {
+            if grid[row_idx][col_idx] == b'A' {
+                let diag_tail = (grid[row_idx - 1][col_idx - 1] as u16) << 8
+                    | grid[row_idx + 1][col_idx + 1] as u16;
+                let anti_diag_tail = (grid[row_idx - 1][col_idx + 1] as u16) << 8
+                    | grid[row_idx + 1][col_idx - 1] as u16;
+                if patterns.contains(&diag_tail) && patterns.contains(&anti_diag_tail) {
+                    match_count += 1;
+                }
+            } else {
+                continue;
+            }
+        }
+    }
+    match_count
+}
+
 fn main() {
     let input = load_input("day04.txt");
     println!("Solution to part 1: {}", solve_part1(&input));
+    println!("Solution to part 2: {}", solve_part2(&input));
 }
 
 #[cfg(test)]
@@ -120,5 +151,10 @@ mod tests {
     #[test]
     fn test_part1() {
         assert_eq!(solve_part1(EXAMPLE_INPUT), 18);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(solve_part2(EXAMPLE_INPUT), 9);
     }
 }
