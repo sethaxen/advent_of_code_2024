@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashSet;
 
 use aoc::load_input;
@@ -8,8 +9,24 @@ fn cmp_orderings(a: u32, b: u32, orders: &OrderingRules) -> bool {
     a == b || orders.contains(&(a, b))
 }
 
+fn cmp_orderings2(a: u32, b: u32, orders: &OrderingRules) -> Ordering {
+    if a == b {
+        Ordering::Equal
+    } else if orders.contains(&(a, b)) {
+        Ordering::Less
+    } else {
+        Ordering::Greater
+    }
+}
+
 fn is_update_valid(updates: &Vec<u32>, orders: &OrderingRules) -> bool {
     updates.is_sorted_by(|a, b| cmp_orderings(*a, *b, orders))
+}
+
+fn make_update_valid(updates: &Vec<u32>, orders: &OrderingRules) -> Vec<u32> {
+    let mut valid_updates = updates.clone();
+    valid_updates.sort_by(|a, b| cmp_orderings2(*a, *b, orders));
+    valid_updates
 }
 
 fn parse_ordering_rules(ordering_rules: &str) -> OrderingRules {
@@ -31,7 +48,10 @@ fn parse_updates<'a>(updates_str: &'a str) -> impl Iterator<Item = Vec<u32>> + '
         .map(|line| line.split(',').map(|s| s.parse::<u32>().unwrap()).collect())
 }
 
-fn count_middle_pages(updates_iter: impl Iterator<Item = Vec<u32>>, orders: &OrderingRules) -> u32 {
+fn count_valid_middle_pages(
+    updates_iter: impl Iterator<Item = Vec<u32>>,
+    orders: &OrderingRules,
+) -> u32 {
     let mut middle_sum = 0;
     for updates in updates_iter {
         let num_pages = updates.len();
@@ -42,16 +62,39 @@ fn count_middle_pages(updates_iter: impl Iterator<Item = Vec<u32>>, orders: &Ord
     middle_sum
 }
 
+fn count_invalid_middle_pages(
+    updates_iter: impl Iterator<Item = Vec<u32>>,
+    orders: &OrderingRules,
+) -> u32 {
+    let mut middle_sum = 0;
+    for updates in updates_iter {
+        let num_pages = updates.len();
+        if !is_update_valid(&updates, orders) {
+            let valid_updates: Vec<u32> = make_update_valid(&updates, orders);
+            middle_sum += valid_updates[num_pages / 2];
+        }
+    }
+    middle_sum
+}
+
 fn solve_part1(input: &str) -> u32 {
     let (ordering_rules_str, updates_str) = input.trim_end().split_once("\n\n").unwrap();
     let orders = parse_ordering_rules(ordering_rules_str);
     let updates_iter = parse_updates(updates_str);
-    count_middle_pages(updates_iter, &orders)
+    count_valid_middle_pages(updates_iter, &orders)
+}
+
+fn solve_part2(input: &str) -> u32 {
+    let (ordering_rules_str, updates_str) = input.trim_end().split_once("\n\n").unwrap();
+    let orders = parse_ordering_rules(ordering_rules_str);
+    let updates_iter = parse_updates(updates_str);
+    count_invalid_middle_pages(updates_iter, &orders)
 }
 
 fn main() {
     let input = load_input("day05.txt");
     println!("Solution to part 1: {}", solve_part1(&input));
+    println!("Solution to part 2: {}", solve_part2(&input));
 }
 
 #[cfg(test)]
@@ -90,5 +133,10 @@ mod tests {
     #[test]
     fn test_part1() {
         assert_eq!(solve_part1(EXAMPLE_INPUT), 143);
+    }
+
+    #[test]
+    fn test_part2() {
+        assert_eq!(solve_part2(EXAMPLE_INPUT), 123);
     }
 }
