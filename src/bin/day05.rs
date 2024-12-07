@@ -12,32 +12,41 @@ fn is_update_valid(updates: &Vec<u32>, orders: &OrderingRules) -> bool {
     updates.is_sorted_by(|a, b| cmp_orderings(*a, *b, orders))
 }
 
-fn solve_part1(input: &str) -> u32 {
-    let mut orders: OrderingRules = HashSet::new();
-    let mut lines = input.trim_end().lines();
-    while let Some(line) = lines.next() {
-        if line.len() == 0 {
-            break;
-        } else {
-            let (before_str, after_str) = line.split_once('|').unwrap();
-            let before = before_str.parse::<u32>().unwrap();
-            let after = after_str.parse::<u32>().unwrap();
-            orders.insert((before, after));
-        }
+fn parse_ordering_rules(ordering_rules: &str) -> OrderingRules {
+    let mut orders = HashSet::new();
+    for line in ordering_rules.lines() {
+        let (before, after) = line.split_once('|').unwrap();
+        orders.insert((
+            before.parse::<u32>().unwrap(),
+            after.parse::<u32>().unwrap(),
+        ));
     }
+    orders
+}
+
+fn parse_updates<'a>(updates_str: &'a str) -> impl Iterator<Item = Vec<u32>> + 'a {
+    updates_str
+        .trim()
+        .lines()
+        .map(|line| line.split(',').map(|s| s.parse::<u32>().unwrap()).collect())
+}
+
+fn count_middle_pages(updates_iter: impl Iterator<Item = Vec<u32>>, orders: &OrderingRules) -> u32 {
     let mut middle_sum = 0;
-    while let Some(line) = lines.next() {
-        if line.len() == 0 {
-            continue;
-        } else {
-            let updates: Vec<u32> = line.split(',').map(|s| s.parse::<u32>().unwrap()).collect();
-            let num_pages = updates.len();
-            if is_update_valid(&updates, &orders) {
-                middle_sum += updates[num_pages / 2];
-            }
+    for updates in updates_iter {
+        let num_pages = updates.len();
+        if is_update_valid(&updates, orders) {
+            middle_sum += updates[num_pages / 2];
         }
     }
     middle_sum
+}
+
+fn solve_part1(input: &str) -> u32 {
+    let (ordering_rules_str, updates_str) = input.trim_end().split_once("\n\n").unwrap();
+    let orders = parse_ordering_rules(ordering_rules_str);
+    let updates_iter = parse_updates(updates_str);
+    count_middle_pages(updates_iter, &orders)
 }
 
 fn main() {
