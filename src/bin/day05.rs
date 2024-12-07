@@ -1,32 +1,19 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use aoc::load_input;
 
-type OrderingRules = HashMap<u32, HashSet<u32>>;
+type OrderingRules = HashSet<(u32, u32)>;
+
+fn cmp_orderings(a: u32, b: u32, orders: &OrderingRules) -> bool {
+    a == b || orders.contains(&(a, b))
+}
 
 fn is_update_valid(updates: &Vec<u32>, orders: &OrderingRules) -> bool {
-    let mut page_numbers = HashSet::new();
-    for page_num in updates {
-        page_numbers.insert(*page_num);
-    }
-    for page_num in updates.iter() {
-        page_numbers.remove(page_num);
-        if page_numbers.len() == 0 {
-            break;
-        }
-        let after_pages = orders.get(page_num);
-        if after_pages.is_none() {
-            return false;
-        }
-        if !page_numbers.is_subset(&after_pages.unwrap()) {
-            return false;
-        }
-    }
-    true
+    updates.is_sorted_by(|a, b| cmp_orderings(*a, *b, orders))
 }
 
 fn solve_part1(input: &str) -> u32 {
-    let mut orders: OrderingRules = HashMap::new();
+    let mut orders: OrderingRules = HashSet::new();
     let mut lines = input.trim_end().lines();
     while let Some(line) = lines.next() {
         if line.len() == 0 {
@@ -37,9 +24,7 @@ fn solve_part1(input: &str) -> u32 {
                 .unwrap();
             let before = before_str.parse::<u32>().unwrap();
             let after = after_str.parse::<u32>().unwrap();
-            orders.entry(before)
-                .or_insert(HashSet::new())
-                .insert(after);
+            orders.insert((before, after));
         }
     }
     let mut middle_sum = 0;
