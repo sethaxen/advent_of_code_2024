@@ -19,9 +19,7 @@ fn solve_part1(input: &str) -> u32 {
         if line.len() == 0 {
             break;
         } else {
-            let (before_str, after_str) = line
-                .split_once('|')
-                .unwrap();
+            let (before_str, after_str) = line.split_once('|').unwrap();
             let before = before_str.parse::<u32>().unwrap();
             let after = after_str.parse::<u32>().unwrap();
             orders.insert((before, after));
@@ -32,9 +30,7 @@ fn solve_part1(input: &str) -> u32 {
         if line.len() == 0 {
             continue;
         } else {
-            let updates: Vec<u32> = line.split(',')
-                .map(|s| s.parse::<u32>().unwrap())
-                .collect();
+            let updates: Vec<u32> = line.split(',').map(|s| s.parse::<u32>().unwrap()).collect();
             let num_pages = updates.len();
             if is_update_valid(&updates, &orders) {
                 middle_sum += updates[num_pages / 2];
